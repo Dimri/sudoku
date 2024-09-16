@@ -1,9 +1,13 @@
-import re
+import os, re
 import json
 from server import app
 from flask import request
 from sudoku import Sudoku
 import puzzle
+from cnnmodel import CNNModel
+from image import digit_matrix
+
+UPLOAD_FOLDER = "./uploads"
 
 
 def valid_board(board):
@@ -37,6 +41,7 @@ def solve_puzzle():
             return "", 400
 
         puzzle = Sudoku(board)
+        puzzle.solve()
         puzzle.print_board()
         board_string = json.dumps(puzzle.board)
         return board_string, 200
@@ -65,3 +70,19 @@ def check_puzzle():
             {"empty_pos": empty_positions_filtered, "is_correct": is_correct}
         )
         return out_response, 200
+
+
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    if request.method == "POST":
+        if "file" not in request.files:
+            return json.dumps({"error": "no file part"}), 400
+
+        file = request.files["file"]
+
+        filename = file.filename
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(file_path)
+
+        board = digit_matrix(file_path)
+        return json.dumps(board.tolist()), 200
