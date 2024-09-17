@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+/client/node_modules
 /.pnp
 .pnp.js
 
@@ -24,3 +24,7 @@ yarn-error.log*
 
 # python
 __pycache__/
+/flask-server/uploads
+
+# files
+App3.js

@@ -50,9 +50,9 @@ def solve_puzzle():
 @app.route("/check", methods=["POST"])
 def check_puzzle():
     if request.method == "POST":
-        orig_board = convert_to_str(json.loads(request.json["body"][0]))
-        changed_board = convert_to_str(json.loads(request.json["body"][1]))
-        empty_positions = json.loads(request.json["body"][2])
+        orig_board = convert_to_str(json.loads(request.json["body"]["originalArr"]))
+        changed_board = convert_to_str(json.loads(request.json["body"]["sudokuArr"]))
+        empty_positions = json.loads(request.json["body"]["emptyPosList"])
         p = Sudoku(changed_board)
         p.print_board()
         # check for board
