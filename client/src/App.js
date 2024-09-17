@@ -21,14 +21,14 @@ function App() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const fn = async () => {
+    const fetchBoard = async () => {
       const response = await axios.get("/puzzle");
       setSudokuArr(response.data);
       setOriginalArr(response.data);
       setSudokuArrCopy(response.data);
       initialEmptyPos(response.data);
     }
-    fn();
+    fetchBoard();
     handleModalResponse();
   }, []);
 
@@ -80,24 +80,25 @@ function App() {
 
   useEffect(() => {
     if (currEmptyPosList.length > 0 && isCorrect.length > 0) {
+      const updateCellColors = () => {
+        currEmptyPosList.forEach((pos, index) => {
+          const [ei, ej] = pos;
+          const id = `id${ei * 9 + ej}`;
+          const cell = cellRefs.current[id];
+
+          if (cell) {
+            cell.style.color = isCorrect[index] ? "#4CAF50" : "#FF6B6B";
+          }
+        });
+      };
       updateCellColors();
     }
   }, [currEmptyPosList, isCorrect]);
 
-  const updateCellColors = () => {
-    currEmptyPosList.forEach((pos, index) => {
-      const [ei, ej] = pos;
-      const id = `id${ei * 9 + ej}`;
-      const cell = cellRefs.current[id];
-
-      if (cell) {
-        cell.style.color = isCorrect[index] ? "#4CAF50" : "#FF6B6B";
-      }
-    });
-  };
 
   // handle check button click
   const checkPuzzle = async () => {
+    initialEmptyPos(sudokuArr);
     try {
       const payload = {
         method: "POST",
@@ -110,6 +111,7 @@ function App() {
           "Content-Type": "application/json",
         },
       };
+      console.log("inside check", payload.body);
       const response = await axios.post("/check", payload);
       setCurrEmptyPosList(response.data.empty_pos);
       setIsCorrect(response.data.is_correct);
@@ -121,17 +123,20 @@ function App() {
   // handle reset button click
   function resetPuzzle() {
     setSudokuArr(originalArr);
+    console.log("inside reset", originalArr);
     setSudokuArrCopy(originalArr);
-    setEmptyPosList([]);
+    initialEmptyPos(sudokuArr);
     setIsCorrect([]);
     setCurrEmptyPosList([]);
     numbers.forEach((i) => {
       numbers.forEach((j) => {
         const id = `id${i * 9 + j}`;
         const cell = cellRefs.current[id];
-        if (!originalArr[i][j]) {
-          cell.style.backgroundColor = "white";
-          cell.style.color = "black";
+        if (cell) {
+          if (!originalArr[i][j]) {
+            cell.style.backgroundColor = "white";
+            cell.style.color = "black";
+          }
         }
       });
     });
@@ -161,14 +166,15 @@ function App() {
 
   const handleModalResponse = async (response) => {
     if (response === "yes") {
-      const response = await axios.post("/upload", sendFormData, {
+      await axios.post("/upload", sendFormData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+      }).then((response) => {
+        setSudokuArr(response.data);
+        setSudokuArrCopy(response.data);
+        setOriginalArr(response.data);
       });
-      setSudokuArr(response.data);
-      setSudokuArrCopy(response.data);
-      setOriginalArr(response.data);
     }
     setModalIsOpen(false);
     setUploadedFile(null);
